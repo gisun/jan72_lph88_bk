@@ -20,6 +20,8 @@ uint16_t textcolor;
 uint16_t bordercolor;
 uint16_t bgcolor;
 
+//uint8_t convert[32];
+
 #define def_MainMenuSize 6
 MENU menu_main[def_MainMenuSize];
 
@@ -74,63 +76,6 @@ void worker_test(void){
 //	s65_drawText( 100, 0, convert, 1, RGB(0x1E,0x2E,0x1E), RGB(0x00,0x00,0x0E));
 }
 
-void worker_trace(void){
-
-    uint8_t test_connection[] = {248, 0};
-    textcolor = RGB(0x0F, 0x1F,0x0F);
-    bordercolor = RGB(0x0F, 0x1F,0x0F);
-
-    switch(worker.update_sm) {
-	case 0:
-	    s65_drawText( 164, 28, test_connection, 1, RGB(0x0E, 0x00, 0x00), bgcolor);
-
-	    ecu_get_rli_ass();
-	    worker.update_sm++;
-	    break;
-	case 1:
-	    switch(buff_pkt_ready) {
-		case 0:
-		    //ждем ответ. нужно добавить обработку таймаута
-		    s65_drawText( 164, 28, test_connection, 1, RGB(0x0F, 0x1F, 0x0F), bgcolor);
-
-		    break;
-		case 1:
-		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
-
-		    ecu_parse_rli_ass();
-		    //VCC
-		    sprintf(convert, "+%3.1fV", ecu_vcc);
-		    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-		    //Temp
-		    sprintf(convert, "+%3d%cC", ecu_temp, 248);
-		    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-		    //Throttle
-		    sprintf(convert, "%2d%c", ecu_throttle, 248);
-		    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-		    //Speed + RPM
-		    sprintf(convert, "%3d km/h", ecu_speed);
-		    s65_drawText( 26, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
-		    sprintf(convert, "%4d", ecu_rpm);
-		    s65_drawText( 26, 54, convert, 4, textcolor, bgcolor);
-		    //dT впрыска
-		    sprintf(convert, "%4.1f ms", ecu_inj);
-		    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-		    //расход топлива
-		    sprintf(convert, "%3.1f l/h", ecu_oil);
-		    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
-
-		    worker.update_sm = 0;
-		    break;
-		default:
-		    //была ошибка - нужен реинит
-		    break;
-	    };
-	    break;
-	default:
-	    worker.update_sm = 0;
-	    break;
-    }
-}
 
 void add_btn(uint8_t idx, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, PMENU menu, void * sub, uint16_t border, uint16_t bg){
     s65_drawRect( x1, y1, x2, y2, border);
@@ -176,45 +121,266 @@ void sub_main(void){
     worker_t0_init(10,0,&worker_test);
 }
 
+
+uint8_t worker_trace_mode;
+
+#define def_trace_RPM_MODE		0
+#define def_trace_VCC_MODE		1
+#define def_trace_TEMP_MODE		2
+#define def_trace_THROTTLE_MODE		3
+#define def_trace_INJ_MODE		4
+#define def_trace_OIL_MODE		5
+
+void worker_trace(void){
+
+    uint8_t test_connection[] = {248, 0};
+    textcolor = RGB(0x0F, 0x1F,0x0F);
+    bordercolor = RGB(0x0F, 0x1F,0x0F);
+
+    switch(worker.update_sm) {
+	case 0:
+
+	    s65_drawText( 164, 28, test_connection, 1, RGB(0x0F, 0x1F, 0x0F), bgcolor);
+
+
+	    ecu_get_rli_ass();
+	    worker.update_sm++;
+	    break;
+	case 1:
+	    switch(buff_pkt_ready) {
+		case 0:
+		    //ждем ответ. нужно добавить обработку таймаута
+		    s65_drawText( 164, 28, test_connection, 1, RGB(0x0E, 0x00, 0x00), bgcolor);
+		    break;
+		case 1:
+		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
+
+		    ecu_parse_rli_ass();
+
+		    sprintf(convert, "%-4.1fL/100", ecu_full_oil);
+		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+		    sprintf(convert, "%3d kmh", ecu_speed);
+		    s65_drawText( 52, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
+
+		    switch(worker_trace_mode){
+			case def_trace_RPM_MODE:
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+			case def_trace_VCC_MODE:
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+			case def_trace_TEMP_MODE:
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+			case def_trace_THROTTLE_MODE:
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+			case def_trace_INJ_MODE:
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+			case def_trace_OIL_MODE:
+			    sprintf(convert, "+%3.1fV", ecu_vcc);
+			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+			    if ((ecu_temp & 0x80) != 0){
+				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    } else {
+				sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    }
+			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fL", ecu_oil);
+			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fms", ecu_inj);
+			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
+			    sprintf(convert, "%4d", ecu_rpm);
+			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
+			    break;
+		    }
+		    worker.update_sm = 0;
+		    break;
+		default:
+		    //была ошибка - нужен реинит
+		    break;
+	    };
+	    break;
+	default:
+	    worker.update_sm = 0;
+	    break;
+    }
+}
+
+void sub_trace_init_btn(void){
+    bgcolor = RGB(0x00, 0x00, 0x1E);
+    s65_clear(bgcolor);
+
+    textcolor = RGB(0x0F, 0x1F,0x0F);
+    bordercolor = RGB(0x0F, 0x1F,0x0F);
+
+    //VCC
+    add_btn(0, 0, 0, 52, 24, menu_trace, &sub_trace_vcc, bordercolor, bgcolor);
+
+    //Temp
+    add_btn(1, 52, 0, 124, 24, menu_trace, &sub_trace_temp, bordercolor, bgcolor);
+
+    //Throttle
+    add_btn(2, 124, 0, 175, 24, menu_trace, &sub_trace_throttle, bordercolor, bgcolor);
+
+    //Speed + RPM
+    add_btn(3, 0, 24, 175, 106, menu_trace, &sub_main, bordercolor, bgcolor);
+
+    //dT впрыска
+    add_btn(4, 0, 106, 87, 131, menu_trace, &sub_trace_inj, bordercolor, bgcolor);
+
+    //расход топлива
+    add_btn(5, 87, 106, 175, 131, menu_trace, &sub_trace_oil, bordercolor, bgcolor);
+}
+
+void sub_trace_rpm(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "RPM", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    worker_trace_mode = def_trace_RPM_MODE;
+}
+
+void sub_trace_vcc(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "VCC", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    pmenu[0].sub_menu = &sub_trace_rpm;
+    worker_trace_mode = def_trace_VCC_MODE;
+}
+
+void sub_trace_temp(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "TEMP", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    pmenu[1].sub_menu = &sub_trace_rpm;
+    worker_trace_mode = def_trace_TEMP_MODE;
+}
+
+void sub_trace_throttle(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "THR", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    pmenu[2].sub_menu = &sub_trace_rpm;
+    worker_trace_mode = def_trace_THROTTLE_MODE;
+}
+void sub_trace_inj(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "INJ", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    pmenu[4].sub_menu = &sub_trace_rpm;
+    worker_trace_mode = def_trace_INJ_MODE;
+}
+
+void sub_trace_oil(void){
+    sub_trace_init_btn();
+
+    s65_drawText( 2, 26, "OIL", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+    pmenu[5].sub_menu = &sub_trace_rpm;
+    worker_trace_mode = def_trace_OIL_MODE;
+}
+
 void sub_trace(void){
 
-    if(ecu_connect() == 1) {
-	bgcolor = RGB(0x00, 0x00, 0x1E);
-	s65_clear(bgcolor);
+    if(is_connected == 0)
+	if((is_connected = ecu_connect()) != 1) sub_main();
 
-        textcolor = RGB(0x0F, 0x1F,0x0F);
-        bordercolor = RGB(0x0F, 0x1F,0x0F);
+    if(is_connected == 1) {
+	sub_trace_rpm();
+	pmenu = (PMENU)&menu_trace;
+	menu_size = def_TraceMenuSize;
 
-        //VCC
-        add_btn(0, 0, 0, 52, 24, menu_trace, &sub_main, bordercolor, bgcolor);
-//	sprintf(convert, "+%.1fV", ecu_vcc); s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
+	ecu_oil = 0;
+	ecu_oil_tmp = 0;
+	ecu_oil_cnt = 0;
 
-        //Temp
-        add_btn(1, 52, 0, 124, 24, menu_trace, &sub_main, bordercolor, bgcolor);
-//	sprintf(convert, "+%3.3d%cC", ecu_temp, 248); s65_drawText( 56, 6, convert, 1, textcolor, bgcolor);
-
-        //Throttle
-        add_btn(2, 124, 0, 175, 24, menu_trace, &sub_main, bordercolor, bgcolor);
-//	sprintf(convert, "%2.2d%c", ecu_throttle, 248); s65_drawText( 131, 6, convert, 1, textcolor, bgcolor);
-
-        //Speed + RPM
-        add_btn(3, 0, 24, 175, 106, menu_trace, &sub_main, bordercolor, bgcolor);
-//        sprintf(convert, "%3.3dkm/h", ecu_speed); s65_drawText( 20, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
-//        sprintf(convert, "%4.4d", ecu_rpm); s65_drawText( 26, 54, convert, 4, textcolor, bgcolor);
-
-        //dT впрыска
-        add_btn(4, 0, 106, 87, 131, menu_trace, &sub_main, bordercolor, bgcolor);
-//	sprintf(convert, "+%.1f%cC", ecu_oil, 248); s65_drawText( 56, 112, convert, 1, textcolor, bgcolor);
-
-        //расход топлива
-        add_btn(5, 87, 106, 175, 131, menu_trace, &sub_main, bordercolor, bgcolor);
-//	sprintf(convert, "%.1f%c", ecu_vcc, 248); s65_drawText( 131, 112, convert, 1, textcolor, bgcolor);
-
-        pmenu = (PMENU)&menu_trace;
-        menu_size = def_TraceMenuSize;
-
-        worker_t0_init( 250, 0, &worker_trace);
-    } else sub_main();
+	worker_trace_mode = def_trace_RPM_MODE;
+	worker_t0_init( 250, 0, &worker_trace);
+    };
 }
 
 void sub_errors(void){

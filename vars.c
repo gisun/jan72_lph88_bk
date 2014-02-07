@@ -12,8 +12,11 @@
 #include "vars.h"
 
 
+volatile uint8_t is_connected;
+
 volatile uint8_t need_reset;
 volatile uint16_t kline_delay;
+
 
 
 volatile float ecu_vcc;
@@ -25,6 +28,9 @@ volatile int ecu_rpm;
 
 volatile float ecu_inj;
 volatile float ecu_oil;
+volatile float ecu_oil_tmp;
+volatile uint8_t ecu_oil_cnt;
+volatile float ecu_full_oil;
 
 volatile float ecu_adc_maf;
 volatile float ecu_adc_lambda;

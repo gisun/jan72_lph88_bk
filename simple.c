@@ -66,7 +66,9 @@ int main(void) {
     int16_t j;
 
     while(1) {
+	is_connected = 0;
 	need_reset = 0;
+	ecu_full_oil = 0;
 	port_init();
 	s65_init();
 
@@ -93,5 +95,16 @@ int main(void) {
 
     return(0);
 }
+
+
+/*
+    // backlight PWM generation
+    // use timer 2 in fast PWM mode for this
+    PORTB &= ~_BV(PB7);  // clear port before enable
+    DDRB |= _BV(PB7);  // will be used for OC2, must be output
+    TCCR2A = _BV(WGM21) | _BV(WGM20) | _BV(COM2A1) | _BV(CS20);
+    TCNT2=0x00;
+    OCR2A=120;
+*/
 
 

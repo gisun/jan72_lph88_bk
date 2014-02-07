@@ -1,4 +1,9 @@
+#include <inttypes.h>
+
 #include <avr/io.h>
+#include <avr/pgmspace.h>
+
+#include "s65_lhp88.h"
 #include "device.h"
 
 void usart_init(void){

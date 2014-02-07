@@ -22,6 +22,16 @@ void worker_t0_init(uint8_t dt8, uint16_t dt16, void * sub);
 void add_btn(uint8_t idx, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, PMENU menu, void * sub, uint16_t border, uint16_t bg);
 
 void sub_main(void);
+
+void sub_trace_init_btn(void);
+
+void sub_trace_rpm(void);
+void sub_trace_vcc(void);
+void sub_trace_temp(void);
+void sub_trace_throttle(void);
+void sub_trace_inj(void);
+void sub_trace_oil(void);
+
 void sub_trace(void);
 void sub_errors(void);
 void sub_adc(void);

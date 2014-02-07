@@ -1,6 +1,7 @@
 #ifndef _VARS_H
 #define _VARS_H
 
+extern volatile uint8_t is_connected;
 extern volatile uint8_t need_reset;
 
 extern volatile uint16_t kline_delay;
@@ -14,6 +15,9 @@ extern volatile int ecu_rpm;
 
 extern volatile float ecu_inj;
 extern volatile float ecu_oil;
+extern volatile float ecu_oil_tmp;
+extern volatile uint8_t ecu_oil_cnt;
+extern volatile float ecu_full_oil;
 
 extern volatile float ecu_adc_maf;
 extern volatile float ecu_adc_lambda;

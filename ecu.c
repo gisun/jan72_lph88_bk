@@ -173,11 +173,11 @@ uint8_t ecu_connect(void){
 
 	usart_init();
 
-	_delay_ms(300);
+	_delay_ms(500);
 
 	ecu_SendCmd( startCommunication, 1);
 
-	_delay_ms(100);
+	_delay_ms(200);
 
 	// парсим ответ
 	switch(buff_pkt_ready){
@@ -209,7 +209,7 @@ uint8_t ecu_connect(void){
 	if(sm_state == 0 ){
 //	    s65_drawText( 60, 50, convert, 1, RGB(0x1E, 0x00,0x00), bgcolor);
 	    usart_deinit();
-	    _delay_ms(3000);
+	    _delay_ms(2000);
 	}
     }
 
@@ -230,7 +230,8 @@ void ecu_parse_rli_ass(void){
 
     // вычисляем температуру двигателя
     ecu_temp = buffer[10] - 0x28;
-    if ((ecu_temp & 0x80) != 0) ecu_temp = 256 - ecu_temp;	// если она ниже нуля
+//    if ((ecu_temp & 0x80) != 0) ecu_temp = 256 - ecu_temp;	// если она ниже нуля
+
     ecu_throttle = buffer[12];					// положение дроссельной заслонки
 
     //обороты
@@ -243,8 +244,18 @@ void ecu_parse_rli_ass(void){
     // длительность впрыска
     ecu_inj = (float) ((buffer[25] << 8) + buffer[24]) / 125;
 
+    if(ecu_full_oil == 0) ecu_full_oil = ecu_oil;
+    else{
+	ecu_full_oil = (ecu_full_oil + ecu_oil) / 2;
+    };
+
     // путевой расход топлива
-    ecu_oil = abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
+    ecu_oil_tmp += abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
+    if(ecu_oil_cnt == 5){
+	ecu_oil = ecu_oil_tmp / 5;
+	ecu_oil_cnt = 0;
+	ecu_oil_tmp = 0;
+    } else ecu_oil_cnt++;
 }
 
 void ecu_get_rli_ft(void){
@@ -259,4 +270,134 @@ void ecu_parse_rli_ft(void){
     ecu_adc_lambda = (float) (buffer[6] * 5) / 256;	// напряжение на датчике кислорода
 }
 
+void ecu_read_dct(void){
+    ecu_SendCmd(readDTCByStatus, 4);
+}
+
+void ecu_parse_dct(void){
+    //  8 байт запрос + 18 байт ответ (4-й байт в ответе - число байтов в посылке)
+    // -10
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+    // !!!!!!!!!!! ответ может быть произвольной длинны !!!!!!!!!!!!!!
+    if (counter>12) {                          // парсим  запрос + ответ
+	unsigned char cislo_oshibok = 0;
+	unsigned char otvet_length = 0;
+
+	cislo_oshibok = buffer[12];              // смотрим число ошибок
+	otvet_length = 13 + (3 * cislo_oshibok); // длинна ответа
+	if (counter > otvet_length) {            // ждем пока примется весь пакет
+	    unsigned char i = 0;
+	    unsigned int crc = 0;
+
+	    for (i=8;i<otvet_length;i++) crc = crc + buffer[i];
+
+	    i =  crc & 0xFF;                       // берем 2 младших разряда 
+	    if ( buffer[otvet_length] == i ) {     // проверяем контрольную сумму
+		sprintf(convert,"%d",cislo_oshibok);
+		put_string(150,5,convert,text_parametr,1);
+		if (cislo_oshibok != 0) {
+		    for (i=0;i < cislo_oshibok;i++) {
+			// за раз можежем вывести на экран максимум 15 ошибок (3 столбика по 5 ошибок)
+			sprintf(convert,"P%02x%02x",buffer[(13+(i*3))],buffer[(14+(i*3))]);
+			if (i < 5) {
+			    put_string(5,25+(i*15),convert,0xAFE0,1);
+			} else
+			    if (i>=5 && i<10) {
+				put_string(65,25+((i-5)*15),convert,0xAFE0,1);
+			    } else
+				if (i>=10 && i<15) put_string(125,25+((i-10)*15),convert,0xAFE0,1);
+		    }
+		}
+	    }
+	    counter = 0;                             // сбрасываем counter иначе опять попадем под условие if (counter>12)
+	}
+    }
+*/
+
+void ecu_clear_diag_info(void){
+    ecu_SendCmd(clearDiagnosticInformation, 3);
+}
+
+void ecu_parse_clear_diag_info(void){
+
+}
+
+
+
+/*
+		if (push && !press) {
+		    if ((x > 61) && (x < 115) && (y > 108) && (y < 124)) {  // если попали на кнопку "сброс"
+			draw_rect(53,105,123,127,0x07E0);            // меняем цвет кнопки 
+			bgcolor = 0x07E0;
+			put_string(65,112,"Reset",text_tablo,1);
+			SendCommand(clearDiagnosticInformation,7);   // стираем ошибки
+			_delay_ms(200);                               // даём ЭБУ время на стирание ошибок (хз зачем, но мне показалось так лучше срабатывает)
+			first_draw = 1;                              // перерисовываем экран
+		    } else {
+			first_draw = 1;
+			mode = Menu;
+		    }
+		}
+		break;
+*/
+
+/*
+	    case SpeedSample:                              // если режим замера скорости 0-100 км/ч
+		if (first_draw == 1) {
+		    fill_screen(bgcolor);
+		    put_string(15,5,"Acceleration 0-100 km/h",text_tablo,1);
+		    put_string(65,25,"0.0",0xAFE0,2);
+		    put_string(50,57,"Speed",text_tablo,1); 
+
+		    draw_rect(53,105,123,127,0xF800);
+		    bgcolor = 0xF800;
+		    put_string(65,112,"Reset",text_tablo,1);
+
+		    first_draw = 0;
+		}
+		if (StartSend == 1) {
+		    SendCommand(readDataByLocalIdentifier_RLI_ASS,6);
+		    StartSend = 0;
+		} else {
+		    if (counter>10) {                          //  если начали принимать ответ
+			unsigned char i = 0;
+			unsigned int crc = 0;
+			unsigned char speed = 0;
+			unsigned char otvet_length = 0;
+			otvet_length = buffer[9];                // длина пакета данных (4-й байт в посылке)
+			if (counter > (otvet_length+10)) {       // ждем пока примется вся посылка
+			    for (i=6;i<(otvet_length+10);i++) crc = crc + buffer[i];                 // считаем контрольную сумму
+			    i =  crc & 0xFF;                         // берем 2 младших разряда 
+			    if ( buffer[(otvet_length+10)] == i ) {  // проверяем контрольную сумму 
+				speed = buffer[29];
+				if (speed == 0) go = 1;              // если машина остановлена разрешаем замер скорости
+				if (speed > 0 && go == 1) {            // начали разгоняться
+				    if (zamer_finish) {
+					TCCR1B=0x00;
+				    } else {
+					TCCR1B=0x04;                       // запустили отсчет времени  
+					if (speed >= 100) {                // замер разгона до 100 км/ч
+					    zamer_finish = 1;
+					    TCCR1B=0x00;
+					}
+				    }
+				}
+				sprintf(convert,"%.1f",((float) (dsec * 0.1)));  // выводим время
+				bgcolor = svetlii_color;
+				put_string(65,25,convert,0xAFE0,2);
+				sprintf(convert,"%d",speed);                     // показываем текущую скорость
+				if (strlen(convert) < 3) put_string(67,75,strcat(convert, " "),0xAFE0,2);
+				else put_string(67,75,convert,0xAFE0,2);
+			    }
+			    counter = 0;                               // сбрасываем counter иначе опять попадем под условие if (counter > (otvet_length+10))
+			}
+		    }
+		}
+*/
 
