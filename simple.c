@@ -97,14 +97,3 @@ int main(void) {
 }
 
 
-/*
-    // backlight PWM generation
-    // use timer 2 in fast PWM mode for this
-    PORTB &= ~_BV(PB7);  // clear port before enable
-    DDRB |= _BV(PB7);  // will be used for OC2, must be output
-    TCCR2A = _BV(WGM21) | _BV(WGM20) | _BV(COM2A1) | _BV(CS20);
-    TCNT2=0x00;
-    OCR2A=120;
-*/
-
-
