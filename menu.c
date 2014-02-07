@@ -129,7 +129,7 @@ uint8_t worker_trace_mode;
 #define def_trace_TEMP_MODE		2
 #define def_trace_THROTTLE_MODE		3
 #define def_trace_INJ_MODE		4
-#define def_trace_OIL_MODE		5
+#define def_trace_FUEL_MODE		5
 
 void worker_trace(void){
 
@@ -153,7 +153,7 @@ void worker_trace(void){
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
 		    ecu_parse_rli_ass();
 
-		    sprintf(convert, "%-4.1fL/100", ecu_full_oil);
+		    sprintf(convert, "%-4.1fL/100", ecu_full_fuel);
 		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
 		    sprintf(convert, "%3d kmh", ecu_speed);
 		    s65_drawText( 52, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
@@ -171,7 +171,7 @@ void worker_trace(void){
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
 			case def_trace_VCC_MODE:
@@ -186,7 +186,7 @@ void worker_trace(void){
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
 			case def_trace_TEMP_MODE:
@@ -201,7 +201,7 @@ void worker_trace(void){
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
 			case def_trace_THROTTLE_MODE:
@@ -216,7 +216,7 @@ void worker_trace(void){
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
 			case def_trace_INJ_MODE:
@@ -231,10 +231,10 @@ void worker_trace(void){
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_OIL_MODE:
+			case def_trace_FUEL_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -242,7 +242,7 @@ void worker_trace(void){
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_oil);
+			    sprintf(convert, "%4.1fL", ecu_fuel);
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
@@ -286,7 +286,7 @@ void sub_trace_init_btn(void){
     add_btn(4, 0, 106, 87, 131, menu_trace, &sub_trace_inj, bordercolor, bgcolor);
 
     //расход топлива
-    add_btn(5, 87, 106, 175, 131, menu_trace, &sub_trace_oil, bordercolor, bgcolor);
+    add_btn(5, 87, 106, 175, 131, menu_trace, &sub_trace_fuel, bordercolor, bgcolor);
 }
 
 void sub_trace_rpm(void){
@@ -332,13 +332,13 @@ void sub_trace_inj(void){
     worker_trace_mode = def_trace_INJ_MODE;
 }
 
-void sub_trace_oil(void){
+void sub_trace_fuel(void){
     sub_trace_init_btn();
 
-    s65_drawText( 2, 26, "OIL", 1, RGB(0x1E,0x2E,0x00), bgcolor);
+    s65_drawText( 2, 26, "FUEL", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
     pmenu[5].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_OIL_MODE;
+    worker_trace_mode = def_trace_FUEL_MODE;
 }
 
 void sub_trace(void){
@@ -351,9 +351,9 @@ void sub_trace(void){
 	pmenu = (PMENU)&menu_trace;
 	menu_size = def_TraceMenuSize;
 
-	ecu_oil = 0;
-	ecu_oil_tmp = 0;
-	ecu_oil_cnt = 0;
+	ecu_fuel = 0;
+	ecu_fuel_tmp = 0;
+	ecu_fuel_cnt = 0;
 
 	worker_trace_mode = def_trace_RPM_MODE;
 	worker_t0_init( 250, 0, &worker_trace);

@@ -27,10 +27,10 @@ volatile uint8_t ecu_speed;
 volatile int ecu_rpm;
 
 volatile float ecu_inj;
-volatile float ecu_oil;
-volatile float ecu_oil_tmp;
-volatile uint8_t ecu_oil_cnt;
-volatile float ecu_full_oil;
+volatile float ecu_fuel;
+volatile float ecu_fuel_tmp;
+volatile uint8_t ecu_fuel_cnt;
+volatile float ecu_full_fuel;
 
 volatile float ecu_adc_maf;
 volatile float ecu_adc_lambda;

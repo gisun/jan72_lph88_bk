@@ -16,15 +16,6 @@
 #include "ecu.h"
 
 
-/*
-uint8_t startCommunication[]                 = {0x81, 0x10,0xF1, 0x81,			0x03};
-uint8_t readDataByLocalIdentifier_RLI_ASS[]  = {0x82, 0x10,0xF1, 0x21,0x01,		0xA5};
-uint8_t readDTCByStatus[]                    = {0x84, 0x10,0xF1, 0x18,0x00,0x00,0x00,	0x9D};	//считать ошибки систмы управления двигателем и трансмиссии
-uint8_t clearDiagnosticInformation[]         = {0x83, 0x10,0xf1, 0x14,0x00,0x00,	0x98};		//стереть ошибки систмы управления двигателем и трансмиссии
-uint8_t testerPresent[]                      = {0x82, 0x10,0xf1, 0x3E,0x01,		0xC2};		//сообщить ецу о подключении и настроить канал связи
-uint8_t readDataByLocalIdentifier_RLI_FT[]   = {0x82, 0x10,0xF1, 0x21,0x03,		0xA7};
-*/
-
 uint8_t startCommunication[]                 = {0x81};
 
 uint8_t readDataByLocalIdentifier_RLI_ASS[]  = {0x21,0x01};
@@ -47,7 +38,6 @@ volatile uint8_t buff_pkt_ready;
 uint16_t bgcolor;
 uint16_t textcolor;
 
-//recive byte vector
 ISR(USART_RX_vect) {
 
     uint8_t status, data;
@@ -106,7 +96,6 @@ ISR(USART_RX_vect) {
     if((buff_pkt_ready > 1) || (kline_delay > def_KLINE_DELAY)) need_reset = 1;
 }
 
-//transmite complite vector
 ISR(USART_UDRE_vect) {
 
     int i;
@@ -194,12 +183,10 @@ uint8_t ecu_connect(void){
 	    case 2:
 		s65_clear(bgcolor);
 		s65_drawText( 20, 50, "CRC error", 2, RGB(0x1E, 0x00,0x00), bgcolor);
-//		sprintf(convert, "%2.2X %2.2X %2.2X %2.2X %2.2X", buffer[0],buffer[1],buffer[2],buffer[3],buffer[4]);
 		break;
 	    case 3:
 		s65_clear(bgcolor);
 		s65_drawText( 20, 50, "KLine err", 2, RGB(0x1E, 0x00,0x00), bgcolor);
-//		sprintf(convert, "%2.2X %2.2X %2.2X %2.2X %2.2X", buffer[0],buffer[1],buffer[2],buffer[3],buffer[4]);
 		break;
 	    default:
 		s65_clear(bgcolor);
@@ -207,7 +194,6 @@ uint8_t ecu_connect(void){
 		break;
 	}
 	if(sm_state == 0 ){
-//	    s65_drawText( 60, 50, convert, 1, RGB(0x1E, 0x00,0x00), bgcolor);
 	    usart_deinit();
 	    _delay_ms(2000);
 	}
@@ -230,7 +216,6 @@ void ecu_parse_rli_ass(void){
 
     // вычисляем температуру двигателя
     ecu_temp = buffer[10] - 0x28;
-//    if ((ecu_temp & 0x80) != 0) ecu_temp = 256 - ecu_temp;	// если она ниже нуля
 
     ecu_throttle = buffer[12];					// положение дроссельной заслонки
 
@@ -244,18 +229,16 @@ void ecu_parse_rli_ass(void){
     // длительность впрыска
     ecu_inj = (float) ((buffer[25] << 8) + buffer[24]) / 125;
 
-    if(ecu_full_oil == 0) ecu_full_oil = ecu_oil;
-    else{
-	ecu_full_oil = (ecu_full_oil + ecu_oil) / 2;
-    };
+    if(ecu_full_fuel == 0) ecu_full_fuel = ecu_fuel;
+    else ecu_full_fuel = (ecu_full_fuel + ecu_fuel) / 2;
 
     // путевой расход топлива
-    ecu_oil_tmp += abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
-    if(ecu_oil_cnt == 5){
-	ecu_oil = ecu_oil_tmp / 5;
-	ecu_oil_cnt = 0;
-	ecu_oil_tmp = 0;
-    } else ecu_oil_cnt++;
+    ecu_fuel_tmp += abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
+    if(ecu_fuel_cnt == 5){
+	ecu_fuel = ecu_fuel_tmp / 5;
+	ecu_fuel_cnt = 0;
+	ecu_fuel_tmp = 0;
+    } else ecu_fuel_cnt++;
 }
 
 void ecu_get_rli_ft(void){

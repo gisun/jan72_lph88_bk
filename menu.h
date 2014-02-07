@@ -30,7 +30,7 @@ void sub_trace_vcc(void);
 void sub_trace_temp(void);
 void sub_trace_throttle(void);
 void sub_trace_inj(void);
-void sub_trace_oil(void);
+void sub_trace_fuel(void);
 
 void sub_trace(void);
 void sub_errors(void);
