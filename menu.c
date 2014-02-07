@@ -139,10 +139,7 @@ void worker_trace(void){
 
     switch(worker.update_sm) {
 	case 0:
-
 	    s65_drawText( 164, 28, test_connection, 1, RGB(0x0F, 0x1F, 0x0F), bgcolor);
-
-
 	    ecu_get_rli_ass();
 	    worker.update_sm++;
 	    break;
@@ -154,12 +151,10 @@ void worker_trace(void){
 		    break;
 		case 1:
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
-
 		    ecu_parse_rli_ass();
 
 		    sprintf(convert, "%-4.1fL/100", ecu_full_oil);
 		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
-
 		    sprintf(convert, "%3d kmh", ecu_speed);
 		    s65_drawText( 52, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
 
@@ -167,11 +162,8 @@ void worker_trace(void){
 			case def_trace_RPM_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
@@ -185,11 +177,8 @@ void worker_trace(void){
 			case def_trace_VCC_MODE:
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
@@ -207,11 +196,8 @@ void worker_trace(void){
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
@@ -221,11 +207,8 @@ void worker_trace(void){
 			case def_trace_THROTTLE_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
@@ -239,11 +222,8 @@ void worker_trace(void){
 			case def_trace_INJ_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
@@ -257,11 +237,8 @@ void worker_trace(void){
 			case def_trace_OIL_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0){
-				sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    } else {
-				sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    }
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
+			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
