@@ -20,13 +20,11 @@ uint16_t textcolor;
 uint16_t bordercolor;
 uint16_t bgcolor;
 
-//uint8_t convert[32];
-
 #define def_MainMenuSize 6
 MENU menu_main[def_MainMenuSize];
 
-#define def_TraceMenuSize 6
-MENU menu_trace[def_TraceMenuSize];
+#define def_tripMenuSize 6
+MENU menu_trip[def_tripMenuSize];
 
 #define def_ErrorsMenuSize 1
 MENU menu_errors[]={
@@ -61,10 +59,9 @@ void worker_dummy(void){
     ;
 };
 
-void worker_t0_init(uint8_t dt8, uint16_t dt16, void * sub){
+void worker_t0_init(uint8_t dt_t0, void * sub){
     timer0_stop();
-    worker.dtime8 = dt8;
-    worker.dtime16 = dt16;
+    worker.t0_dtime = dt_t0;
     worker.sub_worker = sub;
     worker.update = 0;
     worker.update_sm = 0;
@@ -72,8 +69,18 @@ void worker_t0_init(uint8_t dt8, uint16_t dt16, void * sub){
 }
 
 void worker_test(void){
-//	sprintf(convert,"%2.2d:%2.2d:%2.2d",t_hour,t_min,t_sec);
-//	s65_drawText( 100, 0, convert, 1, RGB(0x1E,0x2E,0x1E), RGB(0x00,0x00,0x0E));
+	uint8_t msec, sec, min, hour;
+	uint32_t tmp;
+
+	msec = t0_timer % 100;	//1/100 of sec
+	tmp = t0_timer / 100;
+	sec = tmp % 60;		//60 sec 1 min
+	tmp = tmp / 60;
+	min = tmp % 60;		//60 min 1 hour
+	tmp = tmp / 60;
+	hour = tmp % 24;	//24 hour 1 day
+	sprintf(convert, "%2.2d:%2.2d:%2.2d.%2.2d", hour, min, sec, msec);
+	s65_drawText( 60, 0, convert, 1, RGB(0x1E,0x2E,0x1E), RGB(0x00,0x00,0x0E));
 }
 
 
@@ -95,8 +102,8 @@ void sub_main(void){
     textcolor = RGB(0x0F, 0x1F,0x0F);
     bordercolor = RGB(0x00, 0x0,0x00);
 
-    add_btn(0, 8, 8, 83, 44, menu_main, &sub_trace, bordercolor, bgcolor);
-    s65_drawText( 28, 21, "Trace", 1, textcolor, bgcolor);
+    add_btn(0, 8, 8, 83, 44, menu_main, &sub_trip, bordercolor, bgcolor);
+    s65_drawText( 28, 21, "Trip", 1, textcolor, bgcolor);
 
     add_btn(1, 93, 8, 168, 44, menu_main, &sub_errors, bordercolor, bgcolor);
     s65_drawText( 108, 21, "Errors", 1, textcolor, bgcolor);
@@ -118,20 +125,20 @@ void sub_main(void){
     pmenu = (PMENU)&menu_main;
     menu_size = def_MainMenuSize;
 
-    worker_t0_init(10,0,&worker_test);
+    worker_t0_init(10, &worker_dummy);
 }
 
 
-uint8_t worker_trace_mode;
+uint8_t worker_trip_mode;
 
-#define def_trace_RPM_MODE		0
-#define def_trace_VCC_MODE		1
-#define def_trace_TEMP_MODE		2
-#define def_trace_THROTTLE_MODE		3
-#define def_trace_INJ_MODE		4
-#define def_trace_FUEL_MODE		5
+#define def_trip_RPM_MODE		0
+#define def_trip_VCC_MODE		1
+#define def_trip_TEMP_MODE		2
+#define def_trip_THROTTLE_MODE		3
+#define def_trip_INJ_MODE		4
+#define def_trip_FUEL_MODE		5
 
-void worker_trace(void){
+void worker_trip(void){
 
     uint8_t test_connection[] = {248, 0};
     textcolor = RGB(0x0F, 0x1F,0x0F);
@@ -153,13 +160,17 @@ void worker_trace(void){
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
 		    ecu_parse_rli_ass();
 
-		    sprintf(convert, "%-4.1fL/100", ecu_full_fuel);
+		    ecu_fuel_full = 24.98;
+		    ecu_trip = 123.45;
+
+		    sprintf(convert, "Trip:%5.1f/%-6.1f l/km", ecu_fuel_full, ecu_trip);
 		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
 		    sprintf(convert, "%3d kmh", ecu_speed);
 		    s65_drawText( 52, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
 
-		    switch(worker_trace_mode){
-			case def_trace_RPM_MODE:
+		    switch(worker_trip_mode){
+			case def_trip_RPM_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -168,13 +179,13 @@ void worker_trace(void){
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_VCC_MODE:
+			case def_trip_VCC_MODE:
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -183,13 +194,13 @@ void worker_trace(void){
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_TEMP_MODE:
+			case def_trip_TEMP_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
@@ -198,13 +209,13 @@ void worker_trace(void){
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
 			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_THROTTLE_MODE:
+			case def_trip_THROTTLE_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -213,13 +224,13 @@ void worker_trace(void){
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_INJ_MODE:
+			case def_trip_INJ_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -228,13 +239,13 @@ void worker_trace(void){
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 104, 112, convert, 1, textcolor, bgcolor);
 			    break;
-			case def_trace_FUEL_MODE:
+			case def_trip_FUEL_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
@@ -242,8 +253,8 @@ void worker_trace(void){
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%2d%c", ecu_throttle, 248);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%4.1fL", ecu_fuel);
-			    s65_drawText( 20, 58, convert, 3, textcolor, bgcolor);
+			    sprintf(convert, "%4.1fLx", ecu_fuel);
+			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
@@ -263,100 +274,89 @@ void worker_trace(void){
     }
 }
 
-void sub_trace_init_btn(void){
+void sub_trip_init_btn(void){
     bgcolor = RGB(0x00, 0x00, 0x1E);
     s65_clear(bgcolor);
 
     textcolor = RGB(0x0F, 0x1F,0x0F);
     bordercolor = RGB(0x0F, 0x1F,0x0F);
 
-    //VCC
-    add_btn(0, 0, 0, 52, 24, menu_trace, &sub_trace_vcc, bordercolor, bgcolor);
-
-    //Temp
-    add_btn(1, 52, 0, 124, 24, menu_trace, &sub_trace_temp, bordercolor, bgcolor);
-
-    //Throttle
-    add_btn(2, 124, 0, 175, 24, menu_trace, &sub_trace_throttle, bordercolor, bgcolor);
-
-    //Speed + RPM
-    add_btn(3, 0, 24, 175, 106, menu_trace, &sub_main, bordercolor, bgcolor);
-
-    //dT впрыска
-    add_btn(4, 0, 106, 87, 131, menu_trace, &sub_trace_inj, bordercolor, bgcolor);
-
-    //расход топлива
-    add_btn(5, 87, 106, 175, 131, menu_trace, &sub_trace_fuel, bordercolor, bgcolor);
+    add_btn(0, 0, 0, 52, 24, menu_trip, &sub_trip_vcc, bordercolor, bgcolor);		//VCC
+    add_btn(1, 52, 0, 124, 24, menu_trip, &sub_trip_temp, bordercolor, bgcolor);	//Temp
+    add_btn(2, 124, 0, 175, 24, menu_trip, &sub_trip_throttle, bordercolor, bgcolor);	//Throttle
+    add_btn(3, 0, 24, 175, 106, menu_trip, &sub_main, bordercolor, bgcolor);		//Speed + RPM
+    add_btn(4, 0, 106, 87, 131, menu_trip, &sub_trip_inj, bordercolor, bgcolor);	//dT впрыска
+    add_btn(5, 87, 106, 175, 131, menu_trip, &sub_trip_fuel, bordercolor, bgcolor);	//расход топлива
 }
 
-void sub_trace_rpm(void){
-    sub_trace_init_btn();
+void sub_trip_rpm(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "RPM", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    worker_trace_mode = def_trace_RPM_MODE;
+    worker_trip_mode = def_trip_RPM_MODE;
 }
 
-void sub_trace_vcc(void){
-    sub_trace_init_btn();
+void sub_trip_vcc(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "VCC", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    pmenu[0].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_VCC_MODE;
+    pmenu[0].sub_menu = &sub_trip_rpm;
+    worker_trip_mode = def_trip_VCC_MODE;
 }
 
-void sub_trace_temp(void){
-    sub_trace_init_btn();
+void sub_trip_temp(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "TEMP", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    pmenu[1].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_TEMP_MODE;
+    pmenu[1].sub_menu = &sub_trip_rpm;
+    worker_trip_mode = def_trip_TEMP_MODE;
 }
 
-void sub_trace_throttle(void){
-    sub_trace_init_btn();
+void sub_trip_throttle(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "THR", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    pmenu[2].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_THROTTLE_MODE;
+    pmenu[2].sub_menu = &sub_trip_rpm;
+    worker_trip_mode = def_trip_THROTTLE_MODE;
 }
-void sub_trace_inj(void){
-    sub_trace_init_btn();
+void sub_trip_inj(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "INJ", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    pmenu[4].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_INJ_MODE;
+    pmenu[4].sub_menu = &sub_trip_rpm;
+    worker_trip_mode = def_trip_INJ_MODE;
 }
 
-void sub_trace_fuel(void){
-    sub_trace_init_btn();
+void sub_trip_fuel(void){
+    sub_trip_init_btn();
 
     s65_drawText( 2, 26, "FUEL", 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
-    pmenu[5].sub_menu = &sub_trace_rpm;
-    worker_trace_mode = def_trace_FUEL_MODE;
+    pmenu[5].sub_menu = &sub_trip_rpm;
+    worker_trip_mode = def_trip_FUEL_MODE;
 }
 
-void sub_trace(void){
+void sub_trip(void){
 
     if(is_connected == 0)
 	if((is_connected = ecu_connect()) != 1) sub_main();
 
     if(is_connected == 1) {
-	sub_trace_rpm();
-	pmenu = (PMENU)&menu_trace;
-	menu_size = def_TraceMenuSize;
+	sub_trip_rpm();
+	pmenu = (PMENU)&menu_trip;
+	menu_size = def_tripMenuSize;
 
 	ecu_fuel = 0;
 	ecu_fuel_tmp = 0;
 	ecu_fuel_cnt = 0;
 
-	worker_trace_mode = def_trace_RPM_MODE;
-	worker_t0_init( 250, 0, &worker_trace);
+	worker_trip_mode = def_trip_RPM_MODE;
+	worker_t0_init( 10, &worker_trip);
     };
 }
 
@@ -371,7 +371,7 @@ void sub_errors(void){
     pmenu = (PMENU)&menu_errors;
     menu_size = def_ErrorsMenuSize;
 
-    worker_t0_init(100,0,&worker_test);
+    worker_t0_init( 10, &worker_test);
 }
 
 void sub_adc(void){
@@ -385,7 +385,7 @@ void sub_adc(void){
     pmenu = (PMENU)&menu_adc;
     menu_size = def_AdcMenuSize;
 
-    worker_t0_init(100,0,&worker_test);
+    worker_t0_init( 10, &worker_test);
 }
 
 void sub_accel(void){
@@ -399,7 +399,7 @@ void sub_accel(void){
     pmenu = (PMENU)&menu_accel;
     menu_size = def_AccelMenuSize;
 
-    worker_t0_init(100,0,&worker_test);
+    worker_t0_init( 10, &worker_test);
 }
 
 void sub_config(void){
@@ -413,7 +413,7 @@ void sub_config(void){
     pmenu = (PMENU)&menu_config;
     menu_size = def_ConfigMenuSize;
 
-    worker_t0_init(100,0,&worker_test);
+    worker_t0_init( 10, &worker_test);
 };
 
 void sub_system(void){
@@ -433,5 +433,5 @@ void sub_system(void){
     pmenu = (PMENU)&menu_system;
     menu_size = def_SystemMenuSize;
 
-    worker_t0_init(100,0,&worker_test);
+    worker_t0_init( 10, &worker_test);
 };

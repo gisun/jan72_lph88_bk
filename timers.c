@@ -22,17 +22,11 @@ ISR(TIMER0_OVF_vect) {
 
     kline_delay++;
 
-    if(worker.dtime8 != 0)
-	if(++t_msec == worker.dtime8){
+    if(worker.t0_dtime != 0)
+	if(++t0_dtime == worker.t0_dtime){
+	    t0_dtime = 0;
 	    worker.update = 1;
-	    t_msec = 0;
-	    if(++t_sec == 60){
-		t_sec=0;
-		if(++t_min == 60){
-		    t_min = 0;
-		    if(++t_hour==24)t_hour = 0;
-		};
-	    };
+	    t0_timer++;
 	};
 }
 

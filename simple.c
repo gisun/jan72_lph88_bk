@@ -68,7 +68,12 @@ int main(void) {
     while(1) {
 	is_connected = 0;
 	need_reset = 0;
-	ecu_full_fuel = 0;
+	ecu_fuel_full = 0;
+	ecu_trip = 0;
+
+	t0_timer = 0;
+	t0_timer_last = 0;
+
 	port_init();
 	s65_init();
 

@@ -39,7 +39,6 @@ uint16_t bgcolor;
 uint16_t textcolor;
 
 ISR(USART_RX_vect) {
-
     uint8_t status, data;
 
     status = UCSR0A;
@@ -97,12 +96,9 @@ ISR(USART_RX_vect) {
 }
 
 ISR(USART_UDRE_vect) {
-
     int i;
 
-    if(buff_idx < buff_size) {
-	UDR0 = buffer[buff_idx++];
-    }
+    if(buff_idx < buff_size) UDR0 = buffer[buff_idx++];
     else {
 	buff_idx = 0;
 	buff_size = 0;
@@ -111,7 +107,7 @@ ISR(USART_UDRE_vect) {
 
 	kline_delay = 0;
 
-	for(i = 0 ; i < 100 ; i++){
+	for(i = 0 ; i < 100 ; i++) {
 	    asm volatile("nop");
 	}
 
@@ -156,23 +152,16 @@ uint8_t ecu_connect(void){
     textcolor = RGB(0x0F, 0x1F,0x0F);
 
     for(j = 0 ; j < 5 ; j++){
-
 	s65_clear(bgcolor);
 	s65_drawText( 20, 50, "Checking", 2, textcolor, bgcolor);
-
 	usart_init();
-
 	_delay_ms(500);
-
 	ecu_SendCmd( startCommunication, 1);
-
 	_delay_ms(200);
-
 	// парсим ответ
 	switch(buff_pkt_ready){
 	    case 1:
 		s65_clear(bgcolor);
-
 		if ( (buffer[0] == 0xC1)) {
 		    // положительный ответ startCommunication
 		    s65_drawText( 20, 50, "Connected", 2, textcolor, bgcolor);
@@ -193,18 +182,27 @@ uint8_t ecu_connect(void){
 		s65_drawText( 35, 50, "Timeout", 2, RGB(0x1E, 0x00,0x00), bgcolor);
 		break;
 	}
-	if(sm_state == 0 ){
-	    usart_deinit();
-	    _delay_ms(2000);
+	if(sm_state == 0 ){ usart_deinit(); _delay_ms(2000);
 	}
     }
-
     return sm_state;
 }
 
 
 void ecu_get_rli_ass(void){
     ecu_SendCmd(readDataByLocalIdentifier_RLI_ASS, 2);
+}
+
+void ecu_calc_trip_stat(void){
+    uint32_t tmp;
+
+    asm volatile("cli");
+    tmp = t0_timer - t0_timer_last;
+    t0_timer_last = t0_timer;
+    asm volatile("sei");
+
+    ecu_fuel_full += ecu_fuel_tmp * tmp / (60*60*100);
+    ecu_trip += ecu_speed * tmp / (60*60*100*24);
 }
 
 void ecu_parse_rli_ass(void){
@@ -229,9 +227,6 @@ void ecu_parse_rli_ass(void){
     // длительность впрыска
     ecu_inj = (float) ((buffer[25] << 8) + buffer[24]) / 125;
 
-    if(ecu_full_fuel == 0) ecu_full_fuel = ecu_fuel;
-    else ecu_full_fuel = (ecu_full_fuel + ecu_fuel) / 2;
-
     // путевой расход топлива
     ecu_fuel_tmp += abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
     if(ecu_fuel_cnt == 5){
@@ -239,6 +234,14 @@ void ecu_parse_rli_ass(void){
 	ecu_fuel_cnt = 0;
 	ecu_fuel_tmp = 0;
     } else ecu_fuel_cnt++;
+
+    ecu_calc_trip_stat();
+
+/*
+    if(ecu_fuel_full == 0) ecu_fuel_full = ecu_fuel_tmp;
+    else ecu_fuel_full = (ecu_fuel_full + ecu_fuel_tmp) / 2;
+*/
+
 }
 
 void ecu_get_rli_ft(void){

@@ -26,19 +26,23 @@ volatile uint8_t ecu_throttle;
 volatile uint8_t ecu_speed;
 volatile int ecu_rpm;
 
+volatile float ecu_trip;
+
+volatile uint8_t t0_dtime;
+volatile uint32_t t0_timer;
+
+volatile uint32_t t0_timer_last;
+
 volatile float ecu_inj;
 volatile float ecu_fuel;
+
 volatile float ecu_fuel_tmp;
 volatile uint8_t ecu_fuel_cnt;
-volatile float ecu_full_fuel;
+
+volatile float ecu_fuel_full;
 
 volatile float ecu_adc_maf;
 volatile float ecu_adc_lambda;
-
-volatile uint8_t t_msec;// 0,1 s
-volatile uint8_t t_sec;// 1 sec 0..60
-volatile uint8_t t_min;// 1 min 0..59
-volatile uint8_t t_hour;// 1 hour 0..23
 
 uint8_t convert[32];
 
