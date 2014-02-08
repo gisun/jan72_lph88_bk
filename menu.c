@@ -20,6 +20,8 @@ uint16_t textcolor;
 uint16_t bordercolor;
 uint16_t bgcolor;
 
+uint8_t test_connection[] = {'&', 0};
+
 #define def_MainMenuSize 6
 MENU menu_main[def_MainMenuSize];
 
@@ -48,6 +50,8 @@ MENU menu_config[]={
 
 #define def_SystemMenuSize 2
 MENU menu_system[def_SystemMenuSize];
+
+
 
 PMENU pmenu;
 uint8_t menu_size;
@@ -103,24 +107,24 @@ void sub_main(void){
     bordercolor = RGB(0x00, 0x0,0x00);
 
     add_btn(0, 8, 8, 83, 44, menu_main, &sub_trip, bordercolor, bgcolor);
-    s65_drawText( 28, 21, "Trip", 1, textcolor, bgcolor);
+    s65_drawText( 28, 21, "Старт", 1, textcolor, bgcolor);
 
     add_btn(1, 93, 8, 168, 44, menu_main, &sub_errors, bordercolor, bgcolor);
-    s65_drawText( 108, 21, "Errors", 1, textcolor, bgcolor);
+    s65_drawText( 108, 21, "Ошибки", 1, textcolor, bgcolor);
 
     add_btn(2, 8, 56, 83, 92, menu_main, &sub_adc, bordercolor, bgcolor);
-    s65_drawText( 36, 69, "ADC", 1, textcolor, bgcolor);
+    s65_drawText( 36, 69, "АЦП", 1, textcolor, bgcolor);
 
     add_btn(3, 93, 56, 168, 92, menu_main, &sub_accel, bordercolor, bgcolor);
-    s65_drawText( 112, 69, "Accel", 1, textcolor, bgcolor);
+    s65_drawText( 96, 69, "Ускорение", 1, textcolor, bgcolor);
 
     textcolor = RGB(0x1E, 0x00, 0x00);
 
     add_btn(4, 8, 104, 83, 124, menu_main, &sub_config, bordercolor, bgcolor);
-    s65_drawText( 22, 110, "Config", 1, textcolor, bgcolor);
+    s65_drawText( 11, 110, "Настройка", 1, textcolor, bgcolor);
 
     add_btn(5, 93, 104, 168, 124, menu_main, &sub_system, bordercolor, bgcolor);
-    s65_drawText( 106, 110, "System", 1, textcolor, bgcolor);
+    s65_drawText( 106, 110, "Система", 1, textcolor, bgcolor);
 
     pmenu = (PMENU)&menu_main;
     menu_size = def_MainMenuSize;
@@ -140,7 +144,6 @@ uint8_t worker_trip_mode;
 
 void worker_trip(void){
 
-    uint8_t test_connection[] = {248, 0};
     textcolor = RGB(0x0F, 0x1F,0x0F);
     bordercolor = RGB(0x0F, 0x1F,0x0F);
 
@@ -153,17 +156,16 @@ void worker_trip(void){
 	case 1:
 	    switch(buff_pkt_ready) {
 		case 0:
-		    //ждем ответ. нужно добавить обработку таймаута
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x0E, 0x00, 0x00), bgcolor);
 		    break;
 		case 1:
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
 		    ecu_parse_rli_ass();
 
-		    ecu_fuel_full = 24.98;
-		    ecu_trip = 123.45;
+		    ecu_fuel_full = 24.9;
+		    ecu_trip = 123.4;
 
-		    sprintf(convert, "Trip:%5.1f/%-6.1f l/km", ecu_fuel_full, ecu_trip);
+		    sprintf(convert, "Trip: %4.1f/%-5.1f l/km", ecu_fuel_full, ecu_trip);
 		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
 		    sprintf(convert, "%3d kmh", ecu_speed);
@@ -173,10 +175,10 @@ void worker_trip(void){
 			case def_trip_RPM_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d&", ecu_throttle);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
@@ -188,10 +190,10 @@ void worker_trip(void){
 			case def_trip_VCC_MODE:
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d&", ecu_throttle);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
@@ -205,10 +207,10 @@ void worker_trip(void){
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d%c", ecu_throttle, '&');
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
@@ -218,12 +220,12 @@ void worker_trip(void){
 			case def_trip_THROTTLE_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4d", ecu_rpm);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d&", ecu_throttle);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 16, 112, convert, 1, textcolor, bgcolor);
@@ -233,10 +235,10 @@ void worker_trip(void){
 			case def_trip_INJ_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d&", ecu_throttle);
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fms", ecu_inj);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
@@ -248,10 +250,10 @@ void worker_trip(void){
 			case def_trip_FUEL_MODE:
 			    sprintf(convert, "+%3.1fV", ecu_vcc);
 			    s65_drawText( 3, 6, convert, 1, textcolor, bgcolor);
-			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d%cC", 256 - ecu_temp, 248); // если она ниже нуля
-			    else sprintf(convert, "+%3d%cC", ecu_temp, 248);
+			    if ((ecu_temp & 0x80) != 0) sprintf(convert, "-%3d&C", 256 - ecu_temp); // если она ниже нуля
+			    else sprintf(convert, "+%3d&C", ecu_temp);
 			    s65_drawText( 64, 6, convert, 1, textcolor, bgcolor);
-			    sprintf(convert, "%2d%c", ecu_throttle, 248);
+			    sprintf(convert, "%2d&", ecu_throttle );
 			    s65_drawText( 138, 6, convert, 1, textcolor, bgcolor);
 			    sprintf(convert, "%4.1fLx", ecu_fuel);
 			    s65_drawText( 20, 54, convert, 3, textcolor, bgcolor);
@@ -287,6 +289,8 @@ void sub_trip_init_btn(void){
     add_btn(3, 0, 24, 175, 106, menu_trip, &sub_main, bordercolor, bgcolor);		//Speed + RPM
     add_btn(4, 0, 106, 87, 131, menu_trip, &sub_trip_inj, bordercolor, bgcolor);	//dT впрыска
     add_btn(5, 87, 106, 175, 131, menu_trip, &sub_trip_fuel, bordercolor, bgcolor);	//расход топлива
+
+    worker.update_sm = 0;
 }
 
 void sub_trip_rpm(void){
@@ -366,7 +370,7 @@ void sub_errors(void){
 
     textcolor = RGB(0x1E, 0x00, 0x00);
 
-    s65_drawText( 8, 34, "ERRORS", 1, textcolor, bgcolor);
+    s65_drawText( 8, 34, "Ошибки", 1, textcolor, bgcolor);
 
     pmenu = (PMENU)&menu_errors;
     menu_size = def_ErrorsMenuSize;
@@ -379,6 +383,43 @@ void sub_adc(void){
     s65_clear(bgcolor);
 
     textcolor = RGB(0x1E, 0x00, 0x00);
+
+/*
+
+    textcolor = RGB(0x0F, 0x1F,0x0F);
+    bordercolor = RGB(0x0F, 0x1F,0x0F);
+
+    switch(worker.update_sm) {
+	case 0:
+	    s65_drawText( 164, 28, test_connection, 1, RGB(0x0F, 0x1F, 0x0F), bgcolor);
+	    ecu_get_rli_ass();
+	    worker.update_sm++;
+	    break;
+	case 1:
+	    switch(buff_pkt_ready) {
+		case 0:
+		    //ждем ответ. нужно добавить обработку таймаута
+		    s65_drawText( 164, 28, test_connection, 1, RGB(0x0E, 0x00, 0x00), bgcolor);
+		    break;
+		case 1:
+		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
+		    ecu_parse_rli_ass();
+
+		    ecu_fuel_full = 24.98;
+		    ecu_trip = 123.45;
+
+		    sprintf(convert, "Trip:%4.1f/%-6.1f l/km", ecu_fuel_full, ecu_trip);
+		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
+
+		    sprintf(convert, "%3d kmh", ecu_speed);
+		    s65_drawText( 52, 28, convert, 2, RGB(0x00,0x2E,0x00), bgcolor);
+
+void ecu_get_rli_ft(void);
+void ecu_parse_rli_ft(void);
+
+extern volatile float ecu_adc_maf;
+extern volatile float ecu_adc_lambda;
+*/
 
     s65_drawText( 8, 34, "ADC", 1, textcolor, bgcolor);
 
@@ -394,7 +435,7 @@ void sub_accel(void){
 
     textcolor = RGB(0x1E, 0x00, 0x00);
 
-    s65_drawText( 8, 34, "ACCEL", 1, textcolor, bgcolor);
+    s65_drawText( 8, 34, "Accel", 1, textcolor, bgcolor);
 
     pmenu = (PMENU)&menu_accel;
     menu_size = def_AccelMenuSize;

@@ -43,10 +43,7 @@ timers.c \
 menu.c \
 vars.c \
 errors.c \
-fonts/font_10x16.c  fonts/font_12x16.c  fonts/font_12x20.c  fonts/font_16x26.c  fonts/font_4x6.c  fonts/font_5x12.c  fonts/font_5x8.c  fonts/font_6x10.c  \
-fonts/font_6x8.c  fonts/font_7x12.c  fonts/font_8x12.c  fonts/font_8x14.c  fonts/font_8x8.c \
-fonts/fnt_12x16.c  fonts/fnt_6x8.c  fonts/fnt_7x10_bold.c  fonts/fnt_7x10_thin.c  fonts/fnt_5x7.c
-
+fonts/font_8x11.c \
 
 # If there is more than one source file, append them above, or modify and
 # uncomment the following:

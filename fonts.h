@@ -16,7 +16,9 @@
 //#define FONT_7X12
 //#define FONT_8X8
 
-#define FONT_8X12
+//#define FONT_8X12
+
+#define FONT_8X11
 
 //#define FONT_8X14
 
@@ -97,6 +99,11 @@
 #elif defined(FONT_5X7RUS)
 # define FONT_WIDTH   (7)
 # define FONT_HEIGHT  (5)
+
+#elif defined(FONT_8X11)
+# define FONT_WIDTH   (8)
+# define FONT_HEIGHT (11)
+
 
 #else
 # warning No font defined
