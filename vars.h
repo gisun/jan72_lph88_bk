@@ -17,10 +17,10 @@ extern volatile float ecu_trip;
 
 extern volatile float ecu_inj;
 extern volatile float ecu_fuel;
-extern volatile float ecu_fuel_tmp;
 extern volatile float ecu_fuel_full;
 
-extern volatile uint8_t ecu_fuel_cnt;
+//extern volatile float ecu_fuel_tmp;
+//extern volatile uint8_t ecu_fuel_cnt;
 
 
 extern volatile float ecu_adc_maf;

@@ -162,10 +162,7 @@ void worker_trip(void){
 		    s65_drawText( 164, 28, test_connection, 1, RGB(0x00, 0x1E, 0x00), bgcolor);
 		    ecu_parse_rli_ass();
 
-		    ecu_fuel_full = 24.9;
-		    ecu_trip = 123.4;
-
-		    sprintf(convert, "Trip: %4.1f/%-5.1f l/km", ecu_fuel_full, ecu_trip);
+		    sprintf(convert, "P:%6.2f/%-6.2f l/km", ecu_fuel_full/360000, ecu_trip/360000);
 		    s65_drawText( 2, 94, convert, 1, RGB(0x1E,0x2E,0x00), bgcolor);
 
 		    sprintf(convert, "%3d kmh", ecu_speed);
@@ -356,8 +353,6 @@ void sub_trip(void){
 	menu_size = def_tripMenuSize;
 
 	ecu_fuel = 0;
-	ecu_fuel_tmp = 0;
-	ecu_fuel_cnt = 0;
 
 	worker_trip_mode = def_trip_RPM_MODE;
 	worker_t0_init( 10, &worker_trip);

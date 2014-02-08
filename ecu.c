@@ -193,19 +193,11 @@ void ecu_get_rli_ass(void){
     ecu_SendCmd(readDataByLocalIdentifier_RLI_ASS, 2);
 }
 
-void ecu_calc_trip_stat(void){
-    uint32_t tmp;
-
-    asm volatile("cli");
-    tmp = t0_timer - t0_timer_last;
-    t0_timer_last = t0_timer;
-    asm volatile("sei");
-
-    ecu_fuel_full += ecu_fuel_tmp * tmp / (60*60*100);
-    ecu_trip += ecu_speed * tmp / (60*60*100*24);
-}
-
 void ecu_parse_rli_ass(void){
+    uint32_t tmp;
+    float tmp_trip;
+    float tmp_fuel;
+
     // длина пакета данных (4-й байт в посылке) otvet_length = buffer[9];
     // -10
 
@@ -218,24 +210,35 @@ void ecu_parse_rli_ass(void){
     ecu_throttle = buffer[12];					// положение дроссельной заслонки
 
     //обороты
-    if (ecu_throttle != 0) ecu_rpm = (buffer[13]) * 40;		// обороты если НЕ холостой ход
-    else ecu_rpm = (buffer[14]) * 10;				// обороты на холостом ходу
+    if (ecu_throttle != 0){
+	 ecu_rpm = (buffer[13]) * 40;				// обороты если НЕ холостой ход
+    } else {
+	ecu_rpm = (buffer[14]) * 10;				// обороты на холостом ходу
+    }
 
     // скорость
     ecu_speed = buffer[19];
 
+    asm volatile("cli");
+    tmp = t0_timer - t0_timer_last;
+    t0_timer_last = t0_timer;
+    asm volatile("sei");
+
+    ecu_trip += tmp * ecu_speed;
+
+    if(ecu_speed != 0){
+	// путевой расход топлива
+	ecu_fuel = abs((float) ((buffer[33] << 8) + buffer[32]) / 128);	// L/100km
+	ecu_fuel_full += abs((float) ( ((buffer[33] << 8) + buffer[32]) * tmp * ecu_speed / 12800));
+    } else {
+	// часовой расход топлива
+	ecu_fuel = abs((float) ((buffer[31] << 8) + buffer[30]) / 50);		// L/h
+	ecu_fuel_full += abs((float) ( ((buffer[31] << 8) + buffer[30]) * tmp / 50));
+    }
+
+
     // длительность впрыска
     ecu_inj = (float) ((buffer[25] << 8) + buffer[24]) / 125;
-
-    // путевой расход топлива
-    ecu_fuel_tmp += abs((float) ((buffer[33] << 8) + buffer[32]) / 128);
-    if(ecu_fuel_cnt == 5){
-	ecu_fuel = ecu_fuel_tmp / 5;
-	ecu_fuel_cnt = 0;
-	ecu_fuel_tmp = 0;
-    } else ecu_fuel_cnt++;
-
-    ecu_calc_trip_stat();
 
 /*
     if(ecu_fuel_full == 0) ecu_fuel_full = ecu_fuel_tmp;

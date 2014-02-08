@@ -36,9 +36,6 @@ volatile uint32_t t0_timer_last;
 volatile float ecu_inj;
 volatile float ecu_fuel;
 
-volatile float ecu_fuel_tmp;
-volatile uint8_t ecu_fuel_cnt;
-
 volatile float ecu_fuel_full;
 
 volatile float ecu_adc_maf;
