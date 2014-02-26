@@ -182,12 +182,13 @@ uint8_t ecu_connect(void){
 		s65_drawText( 35, 50, "Timeout", 2, RGB(0x1E, 0x00,0x00), bgcolor);
 		break;
 	}
-	if(sm_state == 0 ){ usart_deinit(); _delay_ms(2000);
+	if(sm_state == 0 ){
+	    usart_deinit();
+	    _delay_ms(2000);
 	}
     }
     return sm_state;
 }
-
 
 void ecu_get_rli_ass(void){
     ecu_SendCmd(readDataByLocalIdentifier_RLI_ASS, 2);
@@ -235,7 +236,6 @@ void ecu_parse_rli_ass(void){
 	ecu_fuel = abs((float) ((buffer[31] << 8) + buffer[30]) / 50);		// L/h
 	ecu_fuel_full += abs((float) ( ((buffer[31] << 8) + buffer[30]) * tmp / 50));
     }
-
 
     // длительность впрыска
     ecu_inj = (float) ((buffer[25] << 8) + buffer[24]) / 125;

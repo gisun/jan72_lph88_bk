@@ -81,14 +81,19 @@ int main(void) {
 
 	while (need_reset == 0) {
 	    TS_scan();
+
 	    if(push == 1){
 		for(i = 0; i < menu_size; i++ )
 		    if( ((x > pmenu[i].x1) && (x < pmenu[i].x2)) && ((y > pmenu[i].y1) && (y < pmenu[i].y2))) {
 			pmenu[i].sub_menu();
+			_delay_ms(200);
 			break;
 		    };
-	    }
-	    if(worker.update == 1){ worker.sub_worker(); worker.update = 0; }
+	    } else
+		if(worker.update == 1) {
+		    worker.sub_worker();
+		    worker.update = 0;
+		}
 	}
 
 	asm volatile("cli");

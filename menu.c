@@ -150,6 +150,7 @@ void worker_trip(void){
     switch(worker.update_sm) {
 	case 0:
 	    s65_drawText( 164, 28, test_connection, 1, RGB(0x0F, 0x1F, 0x0F), bgcolor);
+	    buff_pkt_ready = 0;
 	    ecu_get_rli_ass();
 	    worker.update_sm++;
 	    break;
@@ -287,6 +288,9 @@ void sub_trip_init_btn(void){
     add_btn(4, 0, 106, 87, 131, menu_trip, &sub_trip_inj, bordercolor, bgcolor);	//dT впрыска
     add_btn(5, 87, 106, 175, 131, menu_trip, &sub_trip_fuel, bordercolor, bgcolor);	//расход топлива
 
+    if(worker.update_sm != 0){
+	_delay_ms(500);
+    };
     worker.update_sm = 0;
 }
 
