@@ -9,7 +9,7 @@
 
 #include <avr/interrupt.h>
 
-#include "s65_lhp88.h"
+#include "s65_lcd.h"
 
 #include "init.h"
 #include "vars.h"

@@ -37,7 +37,7 @@ OPT = 3
 SRC	= \
 simple.c \
 init.c \
-s65_lhp88.c \
+s65_lcd.c \
 ecu.c \
 timers.c \
 menu.c \

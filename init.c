@@ -3,7 +3,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 
-#include "s65_lhp88.h"
+#include "s65_lcd.h"
 #include "device.h"
 
 void usart_init(void){
