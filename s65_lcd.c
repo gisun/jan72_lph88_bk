@@ -57,6 +57,12 @@ void s65_writeSPI(uint8_t data) {
 #include "s65_ls020_drv.c"
 #endif
 
+#ifdef LCD_L2F50
+#include "s65_l2f50_drv.c"
+#endif
+
+
+
 
 
 void s65_clear(uint16_t color) {
